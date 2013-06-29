@@ -19,13 +19,11 @@ commander.prompt('Username: ', function(name){
   });
 });
 
-
-
 var prompt = function(){
   reset();
 
   commander.prompt('Search for a song: ', function(song){
-
+    //search with spotify lib
     s.search({ type: 'track', query: song }, function(err, data) {
         if ( err ) {
             console.log('Error occurred: ' + err);
@@ -38,10 +36,11 @@ var prompt = function(){
           tracks.push(track.name + ' - ' + track.artists[0].name);
         });
 
-        // Do something with 'data'
         //console.log(data);
         console.log("Choose a result:");
         commander.choose(tracks, function(i){
+
+          //Play with spotify-web.
           Spotify.login(username, password, function (err, spotify) {
             if (err) throw err;
 
@@ -71,6 +70,7 @@ var prompt = function(){
   });
 }
 
+// clear screen and move cursor
 function reset(){
   process.title = "Juke";
   function lf(){return '\n'}
@@ -78,44 +78,4 @@ function reset(){
               .write(Array.apply(null, Array(process.stdout.getWindowSize()[1])).map(lf).join(''))
               .eraseData(2)
               .goto(1, 1)
-}
-
-function sw(){
-  var net = require('net')
-  , cursor = ansi(process.stdout)
-  , color = process.argv[2]
-
-  // enable "raw mode" so that keystrokes aren't visible
-  process.stdin.resume()
-  if (process.stdin.setRawMode) {
-    process.stdin.setRawMode(true)
-  } else {
-    require('tty').setRawMode(true)
-  }
-
-  // connect to the ASCII Star Wars server
-  var socket = net.connect(23, 'towel.blinkenlights.nl')
-
-  socket.on('connect', function () {
-    if (color in cursor.fg) {
-      cursor.fg[color]()
-    }
-    cursor.hide()
-    socket.pipe(process.stdout)
-  })
-
-  process.stdin.on('data', function (data) {
-    if (data.toString() === '\u0003') {
-      // Ctrl+C; a.k.a SIGINT
-      socket.destroy()
-      process.stdin.pause()
-    }
-  })
-
-  process.on('exit', function () {
-    cursor
-      .show()
-      .fg.reset()
-      .write('\n')
-  })
 }
