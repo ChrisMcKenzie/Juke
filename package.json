@@ -1,0 +1,19 @@
+{
+  "name": "juke",
+  "version": "0.0.1",
+  "author": "ChrisMcKenzie <chris@kbsurfer.com>",
+  "description": "a little spotify streamer",
+  "scripts": {
+    "start": "node juke.js"
+  },
+  "dependencies" : {
+    "spotify-web": "*",
+    "spotify": "*",
+    "lame": "*",
+    "speaker": "*",
+    "commander": "*",
+    "ansi": "*"
+  }
+}
+
+
