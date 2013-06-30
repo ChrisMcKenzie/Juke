@@ -6,19 +6,10 @@ var Speaker = require('speaker');
 var util = require('util');
 var commander = require('commander');
 var ansi = require('ansi');
-
+var creds = require('./cred.json');
 var username, password;
-reset();
+
 commander.version('0.0.1');
-
-commander.prompt('Spotify Username: ', function(name){
-  username = name;
-
-  commander.password('Spotify Password: ', function(pw){
-    password = pw;
-    prompt();
-  });
-});
 
 var prompt = function(){
   reset();
@@ -34,11 +25,11 @@ var prompt = function(){
         data.tracks = data.tracks.slice(0, 20);
         var tracks = [];
         data.tracks.forEach(function(track){
-          tracks.push(track.name + ' - ' + track.artists[0].name);
+          tracks.push(' > '+track.name+' - '+track.artists[0].name+' ('+track.album.name+', '+track.album.label+', '+track.album.released+') ['+prettyPopularity(track.popularity, 10)+'] ');
         });
 
         //console.log(data);
-        console.log("Choose a result:");
+        console.log("Select a Song:");
         commander.choose(tracks, function(i){
 
           //Play with spotify-web.
@@ -50,17 +41,9 @@ var prompt = function(){
               reset();
               if (err) throw err;
 
-              console.log('Playing: %s - %s', track.artist[0].name, track.name);
-              //sw();
-              track.play()
-              .pipe(new lame.Decoder())
-              .pipe(new Speaker())
-              .on('finish', function () {
-                spotify.disconnect();
+              play(track, function(){
                 prompt();
               });
-
-
             });
           });
         });
@@ -71,12 +54,65 @@ var prompt = function(){
   });
 }
 
+function play(track, fn){
+  var speaker = new Speaker();
+  var stream = track.play();
+  var rawstream = stream.pipe(new lame.Decoder());
+  var trackDuration = track.duration;
+
+  rawstream.pipe(speaker);
+
+  console.log(' > '+track.name+' - '+track.artist[0].name+' ('+track.album.name+', '+track.album.label+', '+track.album.date.year+') ['+prettyPopularity(track.popularity, 10)+'] ');
+
+  setTimeout(function () {
+    fn();
+  }, track.duration);
+}
+
+function prettyPopularity(popularity, width) {
+  var output = "";
+  var fill = "#";
+  var unfill = "-";
+  var ratio = popularity/100;
+  for (var i = 0; i < width; i++) {
+    if (i < ratio*width) {
+      output += fill;
+    } else {
+      output += unfill;
+    }
+  }
+  return output;
+}
+
+function timeFormat(duration){
+  var time = ~~(duration / 1000);
+  var minutes = Math.floor(time / 60);
+  time -= minutes * 60;
+  var seconds = parseInt(time % 60, 10);
+
+  return trackLength = minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
+}
+
 // clear screen and move cursor
 function reset(){
-  process.title = "Juke";
   function lf(){return '\n'}
   ansi(process.stdout)
-              .write(Array.apply(null, Array(process.stdout.getWindowSize()[1])).map(lf).join(''))
               .eraseData(2)
               .goto(1, 1)
+}
+
+reset();
+if(creds.username === undefined || creds.password === undefined){
+  commander.prompt('Spotify Username: ', function(name){
+    username = name;
+
+    commander.password('Spotify Password: ', function(pw){
+      password = pw;
+      prompt();
+    });
+  });
+} else {
+  username = creds.username;
+  password = creds.password;
+  prompt();
 }
