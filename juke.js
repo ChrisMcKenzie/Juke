@@ -8,12 +8,13 @@ var commander = require('commander');
 var ansi = require('ansi');
 
 var username, password;
+reset();
 commander.version('0.0.1');
 
-commander.prompt('Username: ', function(name){
+commander.prompt('Spotify Username: ', function(name){
   username = name;
 
-  commander.password('password: ', function(pw){
+  commander.password('Spotify Password: ', function(pw){
     password = pw;
     prompt();
   });
